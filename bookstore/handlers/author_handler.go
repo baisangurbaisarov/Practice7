@@ -15,7 +15,7 @@ func GetAuthors(w http.ResponseWriter, r *http.Request) {
  
 	result := []models.Author{}
 	result = append(result, Authors...)
-	json.NewEncoder(w).Encode(Authors)
+	json.NewEncoder(w).Encode(result)
 }
 
 func CreateAuthor(w http.ResponseWriter, r *http.Request) {

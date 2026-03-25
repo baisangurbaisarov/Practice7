@@ -70,73 +70,77 @@ func GetBookByID(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Not found", http.StatusNotFound)
 }
 
-func authorExists(id int) bool {
-	for _, a := range Authors {
-		if a.ID == id {
-			return true
-		}
-	}
-	return false
-}
-
-func categoryExists(id int) bool {
-	for _, c := range Categories {
-		if c.ID == id {
-			return true
-		}
-	}
-	return false
-}
-
-func validateBook(book models.Book, checkIDs bool) string {
-	if book.Title == "" {
-		return "Title is required"
-	}
-	if book.Price < 0.01 {
-		return "Price must be at least 0.01"
-	}
-	if checkIDs {
-		if book.AuthorID <= 0 || !authorExists(book.AuthorID) {
-			return "Invalid or non-existent author_id"
-		}
-		if book.CategoryID <= 0 || !categoryExists(book.CategoryID) {
-			return "Invalid or non-existent category_id"
-		}
-	}
-	return ""
-}
 
 func CreateBook(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	
-	var book models.Book
-	json.NewDecoder(r.Body).Decode(&book)
+    w.Header().Set("Content-Type", "application/json")
 
-	if book.Title == "" || book.Price <= 0 {
-		http.Error(w, "Invalid data", 400)
-		return
-	}
+    var book models.Book
+    json.NewDecoder(r.Body).Decode(&book)
 
-	book.ID = BookID
-	BookID++
-	Books = append(Books, book)
+    if book.Title == "" {
+        http.Error(w, "Title is required", http.StatusBadRequest)
+        return
+    }
+    if book.Price < 0.01 {
+        http.Error(w, "Price must be at least 0.01", http.StatusBadRequest)
+        return
+    }
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(book)
+    authorFound := false
+    for _, a := range Authors {
+        if a.ID == book.AuthorID {
+            authorFound = true
+            break
+        }
+    }
+    if !authorFound {
+        http.Error(w, "Invalid author_id", http.StatusBadRequest)
+        return
+    }
+
+    categoryFound := false
+    for _, c := range Categories {
+        if c.ID == book.CategoryID {
+            categoryFound = true
+            break
+        }
+    }
+    if !categoryFound {
+        http.Error(w, "Invalid category_id", http.StatusBadRequest)
+        return
+    }
+
+    book.ID = BookID
+    BookID++
+    Books = append(Books, book)
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(book)
 }
 
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	idStr := strings.TrimPrefix(r.URL.Path, "/books/")
 	id, _ := strconv.Atoi(idStr)
 
 	for i := range Books {
 		if Books[i].ID == id {
-			json.NewDecoder(r.Body).Decode(&Books[i])
-			Books[i].ID = id
-			json.NewEncoder(w).Encode(Books[i])
-			return
+			var updated models.Book
+			json.NewDecoder(r.Body).Decode(&updated)
+
+			if updated.Title == "" {
+                http.Error(w, "Title is required", http.StatusBadRequest)
+                return
+            }
+            if updated.Price < 0.01 {
+                http.Error(w, "Price must be at least 0.01", http.StatusBadRequest)
+                return
+            }
+
+            updated.ID = id
+            Books[i] = updated
+            json.NewEncoder(w).Encode(Books[i])
+            return
 		}
 	}
 	http.Error(w, "Not found", http.StatusNotFound)
