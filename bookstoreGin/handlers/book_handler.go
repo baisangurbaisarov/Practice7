@@ -12,13 +12,6 @@ import (
 var Books []models.Book
 var BookID = 1
 
-// GetBooks godoc
-// GET /books — returns a paginated, optionally filtered list of books
-// Query params:
-//
-//	page     int  (default 1)
-//	limit    int  (default 5)
-//	category int  (filter by CategoryID)
 func GetBooks(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "5")
