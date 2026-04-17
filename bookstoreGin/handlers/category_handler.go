@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"bookstore/models"
+	"bookstoreGin/models"
 
 	"github.com/gin-gonic/gin"
 )
